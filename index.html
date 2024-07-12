@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: rgb(96, 146, 190);
+      height: 100vh;
+      width: 100vw;
+      padding: 32px 10vw;
+    }
+
+    #heading {
+      margin: 1em 0;
+    }
+
+    .panel {
+      display: flex;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgb(86, 86, 207);
+      background-color: rgb(144, 254, 254);
+    }
+
+    .question {
+      text-align: center;
+      font-size: 30px;
+      /* width: 50%; */
+      margin-bottom: 20px;
+    }
+
+    .options {
+      font-size: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 20px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      /* margin-right: 75px; */
+      margin-top: 2em;
+      font-size: 20px;
+      padding: 10px 20px;
+      background-color: #0a2b48;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      color: #0a2b48;
+      background-color: white;
+      border: 1 px solid #0a2b48;
+    }
+
+    #score {
+      font-size: 30px;
+      color: darkslategray;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="panel">
+    <h1 id="heading">Quiz Application Using JavaScript</h1>
+    <div id="ques"></div>
+    <div id="opt"></div>
+    <button onclick="checkAnswer()" id="btn">SUBMIT</button>
+    <div id="score"></div>
+  </div>
+</body>
+<script>
+  Questions = [];
+  quesTag = document.getElementById("ques");
+
+  async function fetchQuestions() {
+    try {
+      const resp = await fetch("https://opentdb.com/api.php?amount=10");
+      if (!resp.ok) {
+        throw new Error("Couldn't fetch questions!");
+      }
+      const data = await resp.json();
+      Questions = data.results;
+    } catch (err) {
+      console.error(err);
+      ques.innerHTML = `
+    <h5 style="background-color:"red"">${err}</h5>
+    `;
+    }
+  }
+
+  let currentQuestion = 0;
+  let score = 0;
+
+  if (Questions.length === 0) {
+    ques.innerHTML = `
+      <h5>Please Wait! <br> Loading Questions...</h5>
+    `;
+  }
+
+  function loadQues() {
+    const opt = document.getElementById("opt");
+
+    let currQuesText = Questions[currentQuestion].question;
+    console.log(currQuesText);
+    ques.innerText = currQuesText;
+
+    opt.innerHTML = "";
+    const correctAnswer = Questions[currentQuestion].correct_answer;
+    const incorrectAnswers = Questions[currentQuestion].incorrect_answers;
+
+    const options = [correctAnswer, ...incorrectAnswers];
+
+    options.sort((o1, o2) => Math.random() < 0.5);
+
+    options.forEach((option, idx) => {
+      const optDiv = document.createElement("div");
+      const optionTag = document.createElement("input");
+      const labelTag = document.createElement("label");
+
+      optionTag.type = "radio";
+      // optionTag.name = `option${idx}`;
+      optionTag.name = "answer";
+      optionTag.value = option;
+
+      labelTag.textContent = option;
+      // labelTag.htmlFor = `option${idx}`;
+
+      optDiv.appendChild(optionTag);
+      optDiv.appendChild(labelTag);
+
+      opt.appendChild(optDiv);
+    });
+  }
+  setTimeout(() => {
+    loadQues();
+    if (Questions.length === 0) {
+      ques.innerHTML = `<h5 style='color: red'>Unable 
+		to fetch data, Please try again!!</h5>`;
+    }
+  }, 2000);
+
+  function checkAnswer() {
+    const selectedAns = document.querySelector(
+      'input[name="answer"]:checked'
+    ).value;
+
+    if (selectedAns === Questions[currentQuestion].correct_answer) {
+      score++;
+    }
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    if (currentQuestion < Questions.length - 1) {
+      currentQuestion++;
+      loadQues();
+    } else {
+      document.getElementById("opt").remove();
+      document.getElementById("ques").remove();
+      document.getElementById("btn").remove();
+      showTotal();
+    }
+  }
+
+  function showTotal() {
+    const totalScore = document.querySelector("#score");
+    totalScore.innerHTML = `<h3>Your Score: ${score}/10</h3>`;
+    Questions.forEach((ques, idx) => {
+      totalScore.innerHTML += `
+    <p>
+      ${idx + 1}: ${ques.correct_answer}
+    </p>
+    `;
+    });
+  }
+
+  fetchQuestions();
+
+</script>
+
+</html>
+
+
